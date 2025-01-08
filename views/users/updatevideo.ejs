@@ -1,0 +1,21 @@
+<div class="container">
+    <div class="row">
+        <div class="col-lg-6 col-md-8 col-sm-12 mx-auto">
+            <div class="card mt-4">
+                <h4 class="card-header" style="font-size:14px">
+                   Update Video Title
+                </h4>
+                <div class="card-body">
+                    <form action="/users/singlevideo/<%= data._id%>?_method=PUT" method="POST">
+                        <div class="form-group mb-1">
+                            <label class="form-label">Video Title</label>
+                            <input type="text" class="form-control" placeholder="Enter Video Title" name="vieotitle" value="<%= data.videoplaceholder%>"/>
+                        </div>
+                     
+                        <button class="btn btn-primary btn-sm text-white fw-bold">Update</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

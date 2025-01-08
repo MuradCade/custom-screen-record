@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screen and Audio Recorder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #preview {
+            width: 640px;
+            height: 360px;
+            border: 2px solid #333;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>Screen and Audio Recorder</h1>
+    <button id="start">Start Recording</button>
+    <button id="pause" disabled>Pause Recording</button>
+    <button id="resume" disabled>Resume Recording</button>
+    <button id="stop" disabled>Stop Recording</button>
+    <video id="preview" controls autoplay muted></video>
+
+    <script>
+        const startButton = document.getElementById('start');
+        const pauseButton = document.getElementById('pause');
+        const resumeButton = document.getElementById('resume');
+        const stopButton = document.getElementById('stop');
+        const preview = document.getElementById('preview');
+
+        let mediaRecorder;
+        let recordedChunks = [];
+        let screenStream;
+        let audioStream;
+        let combinedStream;
+
+        startButton.addEventListener('click', async () => {
+            try {
+                // Capture screen
+                screenStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true,
+                });
+
+                // Capture audio
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                // Combine screen and audio streams
+                combinedStream = new MediaStream([
+                    ...screenStream.getVideoTracks(),
+                    ...audioStream.getAudioTracks(),
+                ]);
+
+                // Display the stream in the video element
+                preview.srcObject = combinedStream;
+
+                // Initialize MediaRecorder
+                mediaRecorder = new MediaRecorder(combinedStream);
+                recordedChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    recordedChunks = [];
+
+                    // Send the video to the server
+                    const formData = new FormData();
+                    const videoName = `recording-${Date.now()}.webm`;
+                    formData.append('video', blob, videoName);
+
+                    await fetch('/upload', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    alert('Recording uploaded successfully!');
+                    preview.srcObject = null;
+                    preview.src = URL.createObjectURL(blob);
+                    preview.muted = false;
+                };
+
+                mediaRecorder.start();
+                startButton.disabled = true;
+                pauseButton.disabled = false;
+                stopButton.disabled = false;
+            } catch (error) {
+                console.error('Error accessing media devices:', error);
+                alert('Could not start recording. Please allow screen and microphone permissions.');
+            }
+        });
+
+        pauseButton.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.pause();
+                pauseButton.disabled = true;
+                resumeButton.disabled = false;
+                setTimeout(() => {
+                    resumeButton.disabled = false; // Enable resume after a delay
+                }, 5000); // 5 seconds pause time
+            }
+        });
+
+        resumeButton.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state === 'paused') {
+                mediaRecorder.resume();
+                pauseButton.disabled = false;
+                resumeButton.disabled = true;
+            }
+        });
+
+        stopButton.addEventListener('click', () => {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+                screenStream.getTracks().forEach((track) => track.stop());
+                audioStream.getTracks().forEach((track) => track.stop());
+                startButton.disabled = false;
+                pauseButton.disabled = true;
+                resumeButton.disabled = true;
+                stopButton.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>

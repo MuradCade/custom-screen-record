@@ -1,0 +1,40 @@
+<div class="row">
+    <div class="col-lg-8 col-md-8 col-sm-12 mx-auto mt-4">
+        <div class="card">
+            <h4 class="card-header">
+                Videos List
+            </h4>
+            <div class="card-body table-responsive">
+                <table class="table table-bordered table-hover table-sm">
+                    <tr style="font-size:14px;">
+                        <td>#</td>
+                        <td>Video Name</td>
+                        <td>Recorded_Date</td>
+                        <td>Actions</td>
+                    </tr>
+                
+                    <% 
+                    let rowid = 1;
+                    displayvideo.forEach(data => { %>
+                        <tr style="font-size:14px;">
+                            <td><%= rowid %></td>
+                            <td><%= data.videoplaceholder%></td>
+                            <td><%= data.uploaddate.toDateString(); %></td>
+                            <td>
+                                <a href="/users/displayvideo/<%= data._id%>"class='btn btn-secondary btn-sm fw-bold mb-2'>View</a>
+                                <a href="/visitor/lessonvideo/<%= data._id%>"class='btn btn-success btn-sm fw-bold mb-2'>share</a>
+                                
+                                <a href="/users/singlevideo/<%=data._id%>" class="btn btn-primary btn-sm text-white fw-bold mb-2">Update</a> &numsp; 
+                               <form action="/user/deletvideo/<%=data._id%>?_method=DELETE" method="POST">
+                                
+                                <button class="btn btn-danger text-white fw-bold btn-sm">Delete</button>
+                                </form> 
+                                </td>
+                        </tr>
+                    <% rowid++}) %>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
