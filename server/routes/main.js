@@ -277,7 +277,7 @@ router.get('/users/displayvideo/:id',async(req,res)=>{
 
 
 // display single video for the vistor(some one link is shared with)
-router.get('/visitor/lessonvideo/:id',tokenmiddleware,async(req,res)=>{
+router.get('/visitor/lessonvideo/:id',async(req,res)=>{
 try {
     const locals = {
         title:'display video'
